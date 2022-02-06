@@ -1,8 +1,9 @@
-import { App, Stack, StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import * as cdk from '@aws-cdk/core';
+import { envVars } from './lib/env-vars';
+import { PortfolioStack } from './lib/portfolio-stack';
 
-export class MyStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
+export class MyStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: cdk.StackProps = {}) {
     super(scope, id, props);
 
     // define resources here...
@@ -11,13 +12,13 @@ export class MyStack extends Stack {
 
 // for development, use account/region from cdk cli
 const devEnv = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION,
+  account: process.env.CDK_DEPLOY_ACCOUNT,
+  region: process.env.CDK_DEPLOY_REGION,
 };
 
-const app = new App();
+const app = new cdk.App();
 
-new MyStack(app, 'my-stack-dev', { env: devEnv });
-// new MyStack(app, 'my-stack-prod', { env: prodEnv });
-
+new PortfolioStack(app, `${envVars.COMPANY_NAME}-Portfolio`, {
+  env: devEnv,
+});
 app.synth();
