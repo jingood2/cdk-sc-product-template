@@ -1,0 +1,51 @@
+{
+  "Parameters": {
+      "authMode": {
+          "Description": "Auth mode for Sagemaker Domain",
+          "Type": "String",
+          "Default": "IAM"
+      },
+      "domainName": {
+          "Description": "domain name for Sagemaker Domain",
+          "Type": "String",
+          "Default": "Test"
+      },
+      "subnetIds": {
+          "Type": "List<AWS::EC2::Subnet::Id>",
+          "Description": "domain name for Sagemaker Domain"
+      },
+      "vpcId": {
+          "Description": "vpc id for Sagemaker Domain",
+          "Type": "String",
+          "Default": "vpc-2334455555"
+      },
+      "defaultExecutionRoleUser": {
+          "Description": "default execution role user for Sagemaker Domain",
+          "Type": "String"
+      }
+  },
+  "Resources": {
+      "SagemakerDomainCDK": {
+          "Type": "AWS::SageMaker::Domain",
+          "Properties": {
+              "AuthMode": {
+                  "Ref": "authMode"
+              },
+              "DefaultUserSettings": {
+                  "ExecutionRole": {
+                      "Ref": "defaultExecutionRoleUser"
+                  }
+              },
+              "DomainName": {
+                  "Ref": "domainName"
+              },
+              "SubnetIds": {
+                  "Ref": "subnetIds"
+              },
+              "VpcId": {
+                  "Ref": "vpcId"
+              }
+          }
+      }
+  }
+}

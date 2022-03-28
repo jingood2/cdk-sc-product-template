@@ -1,0 +1,18 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+Parameters:
+  sagemakerDomainId:
+    Description: "Sagemaker domain id for the Sagemaker studio"
+    Type: "String"
+  userProfileName:
+    Description: "User profile name to add to the Sagemaker studio"
+    Type: "String"
+    Default: "datascience-teamA"
+
+Resources:
+  SagemakerUser:
+    Type: AWS::SageMaker::UserProfile
+    Properties:
+      DomainId: !Ref sagemakerDomainId
+      UserProfileName: !Ref userProfileName

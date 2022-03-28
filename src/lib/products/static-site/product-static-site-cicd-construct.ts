@@ -114,6 +114,10 @@ export class StaticSiteCicdConstruct extends cdk.Construct {
             commands: [
               `aws s3 sync "dist" "s3://${staticWebsiteBucket}" --delete`,
               `aws cloudfront create-invalidation --distribution-id ${distributionId} --paths "/*"`,
+
+              // ecs cli
+              // eks cli
+              // ec2
             ],
           },
         },

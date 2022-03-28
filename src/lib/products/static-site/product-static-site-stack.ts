@@ -1,7 +1,7 @@
 //import * as acm from '@aws-cdk/aws-certificatemanager';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
-import { ProductConstruct } from './product-construct';
+import { ProductConstruct } from './product-static-site-construct';
 
 export interface ProductStackProps {
 

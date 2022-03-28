@@ -2,7 +2,8 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
 import { envVars } from './env-vars';
-import { MyProductStack } from './products/static-site/product-stack';
+import { ProductEcsCluster } from './products/ecs/product-ecs-cluster-stack';
+import { ProductECSExternalALB } from './products/ecs/product-ecs-external-alb-stack';
 import { StaticSiteCicd } from './products/static-site/product-static-site-cicd-stack';
 
 export interface IPortfolioStackProps extends cdk.StackProps {
@@ -30,20 +31,20 @@ export class PortfolioStack extends cdk.Stack {
       if ( envVars.SC_ACCESS_ROLE_ARN != '') {
         this.portfolio.giveAccessToRole(iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}-Role`, envVars.SC_ACCESS_ROLE_ARN));
       } else {
-        this.portfolio.giveAccessToRole(iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}AdminRole`, `arn:aws:iam::${process.env.CDK_DEPLOY_ACCOUNT}:role/AssumableAdminRole`));
+        this.portfolio.giveAccessToRole(iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}AdminRole`, `arn:aws:iam::${process.env.CDK_DEFAULT_ACCOUNT}:role/AssumableAdminRole`));
       }
+
+      const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, 'OrgTagOptions', {
+        allowedValuesForTags: {
+          stage: ['dev', 'qa', 'staging', 'production'],
+        },
+      });
+      this.portfolio.associateTagOptions(tagOptionsForPortfolio);
     }
 
-    const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, 'OrgTagOptions', {
-      allowedValuesForTags: {
-        stage: ['dev', 'qa', 'staging', 'production'],
-      },
-    });
-    this.portfolio.associateTagOptions(tagOptionsForPortfolio);
-
     const devEnv = {
-      account: process.env.CDK_DEPLOY_ACCOUNT,
-      region: process.env.CDK_DEPLOY_REGION,
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION,
     };
 
     const product = new servicecatalog.CloudFormationProduct(this, 'static-site', {
@@ -53,7 +54,7 @@ export class PortfolioStack extends cdk.Stack {
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new MyProductStack(this, 'StaticSiteS3CloudFront', {
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductECSExternalALB(this, 'StaticSiteS3CloudFront', {
             env: devEnv,
           })),
         },
@@ -78,5 +79,53 @@ export class PortfolioStack extends cdk.Stack {
 
     this.portfolio.addProduct(product2);
 
+    const product3 = new servicecatalog.CloudFormationProduct(this, 'ecs-cluster-infra', {
+      productName: 'ecs-cluster',
+      owner: 'Product Owner',
+      description: 'ECS Cluster Infra',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductEcsCluster(this, 'EcsCluster', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product3);
+
+    const product4 = new servicecatalog.CloudFormationProduct(this, 'ecs-alb-product', {
+      productName: 'ecs-alb-product',
+      owner: 'Product Owner',
+      description: ' application load balancer, for forwarding traffic to containers',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductECSExternalALB(this, 'EcsAlbProduct', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product4);
+
+    /* const product3 = new servicecatalog.CloudFormationProduct(this, 'sagemaker-studio', {
+      productName: 'Sagemaker Studio',
+      owner: 'Product Owner',
+      description: 'Sagemaker Studio Product',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new SagemakerStack(this, 'sagemakerStudio', {
+            env: devEnv,
+            vpc: vpc,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product3); */
   }
 }

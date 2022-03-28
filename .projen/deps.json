@@ -105,6 +105,10 @@
       "type": "runtime"
     },
     {
+      "name": "@aws-cdk/aws-codedeploy",
+      "type": "runtime"
+    },
+    {
       "name": "@aws-cdk/aws-codepipeline",
       "type": "runtime"
     },
@@ -114,6 +118,10 @@
     },
     {
       "name": "@aws-cdk/aws-ec2",
+      "type": "runtime"
+    },
+    {
+      "name": "@aws-cdk/aws-ecs",
       "type": "runtime"
     },
     {
@@ -158,6 +166,10 @@
     },
     {
       "name": "@aws-cdk/aws-sns",
+      "type": "runtime"
+    },
+    {
+      "name": "@aws-cdk/aws-ssm",
       "type": "runtime"
     },
     {
