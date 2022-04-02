@@ -40,6 +40,8 @@ export class StackName extends servicecatalog.ProductStack {
               'TGListenerPort',
               'TGHealthCheckPath',
               'TGHealthCheckPort',
+              'PathPattern',
+              'HostHeader',
             ],
           },
           {
@@ -140,10 +142,22 @@ export class StackName extends servicecatalog.ProductStack {
       default: 80,
     });
 
-    new cdk.CfnParameter(this, 'Priority', {
+    const priority = new cdk.CfnParameter(this, 'Priority', {
       type: 'Number',
       description: 'Priority of Listener Rule',
       default: 100,
+    });
+
+    const pathPattern = new cdk.CfnParameter(this, 'PathPattern', {
+      type: 'CommaDelimitedList',
+      description: 'ALB Path Pattern (/, /health)',
+      default: '/',
+    });
+
+    const hostHeader = new cdk.CfnParameter(this, 'HostHeader', {
+      type: 'CommaDelimitedList',
+      description: 'ALB Host Header (test.example.com)',
+      default: 'test.example.com',
     });
 
     /*  const regionTable = new cdk.CfnMapping(this, 'MapContainerSize', {
@@ -264,11 +278,11 @@ export class StackName extends servicecatalog.ProductStack {
 
     new elbv2.ApplicationListenerRule(this, 'MyApplicationListenerRule', {
       listener: listener,
-      priority: 10,
+      priority: priority.valueAsNumber,
       // the properties below are optional
       conditions: [
-        elbv2.ListenerCondition.pathPatterns(['/ok']),
-        elbv2.ListenerCondition.hostHeaders(['*.skcnctf.tk']),
+        elbv2.ListenerCondition.pathPatterns(pathPattern.valueAsList),
+        elbv2.ListenerCondition.hostHeaders(hostHeader.valueAsList),
       ],
       //targetGroups: [props.targetGroup],
       targetGroups: [atg],
