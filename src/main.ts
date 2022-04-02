@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import { envVars } from './lib/env-vars';
 import { PortfolioStack } from './lib/portfolio-stack';
+//import { StackName } from './lib/products/ecs/product-ecs-fargate-stack';
 //import { Ec2AsgCiCdStack } from './lib/products/cicd/ec2/product-ec2-asg-cicd-stack';
 
 export class MyStack extends cdk.Stack {
@@ -23,6 +24,10 @@ new PortfolioStack(app, `${envVars.COMPANY_NAME}-Portfolio`, {
   env: devEnv,
 });
 
+/* new StackName(app, `${envVars.COMPANY_NAME}-MyStack`, {
+  env: devEnv,
+});
+ */
 /* new Ec2AsgCiCdStack(app, 'ec2AsgCiCd', {
   env: devEnv,
 }); */

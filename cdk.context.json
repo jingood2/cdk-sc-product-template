@@ -59,5 +59,78 @@
         ]
       }
     ]
-  }
+  },
+  "vpc-provider:account=037729278610:filter.vpc-id=vpc-03cda715311273495:region=ap-northeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-03cda715311273495",
+    "vpcCidrBlock": "10.1.0.0/18",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "pri",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-0aa7c0d2686bfb8c1",
+            "cidr": "10.1.0.0/22",
+            "availabilityZone": "ap-northeast-2a",
+            "routeTableId": "rtb-0d70402e9ac192865"
+          },
+          {
+            "subnetId": "subnet-0066a627bfa94a170",
+            "cidr": "10.1.4.0/22",
+            "availabilityZone": "ap-northeast-2c",
+            "routeTableId": "rtb-01cbfea72a2a177b2"
+          }
+        ]
+      },
+      {
+        "name": "Isolated",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-081fcb9faef374158",
+            "cidr": "100.26.0.0/22",
+            "availabilityZone": "ap-northeast-2a",
+            "routeTableId": "rtb-0adcdf5fea3f41830"
+          },
+          {
+            "subnetId": "subnet-01dd517f057d10b88",
+            "cidr": "100.26.4.0/22",
+            "availabilityZone": "ap-northeast-2c",
+            "routeTableId": "rtb-0897eb63aa08dc4ef"
+          }
+        ]
+      }
+    ]
+  },
+  "load-balancer:account=037729278610:loadBalancerArn=arn$:aws:elasticloadbalancing:ap-northeast-2:037729278610:loadbalancer/app/SC-03-Appli-O0EL44YGTUEG/be60b59a8e2efc93:loadBalancerType=application:region=ap-northeast-2": {
+    "loadBalancerArn": "arn:aws:elasticloadbalancing:ap-northeast-2:037729278610:loadbalancer/app/SC-03-Appli-O0EL44YGTUEG/be60b59a8e2efc93",
+    "loadBalancerCanonicalHostedZoneId": "ZWKZPGTI48KDX",
+    "loadBalancerDnsName": "internal-SC-03-Appli-O0EL44YGTUEG-1617615404.ap-northeast-2.elb.amazonaws.com",
+    "vpcId": "vpc-03cda715311273495",
+    "securityGroupIds": [
+      "sg-043c93c49af88b3bd"
+    ],
+    "ipAddressType": "ipv4"
+  },
+  "security-group:account=037729278610:region=ap-northeast-2:securityGroupId=sg-043c93c49af88b3bd": {
+    "securityGroupId": "sg-043c93c49af88b3bd",
+    "allowAllOutbound": false
+  },
+  "ssm:account=037729278610:parameterName=/dev/alb/internal/arn:region=ap-northeast-2": "arn:aws:elasticloadbalancing:ap-northeast-2:037729278610:loadbalancer/app/SC-03-Appli-QU7CHXLZTJSI/308ecac770fcd027",
+  "load-balancer:account=037729278610:loadBalancerArn=arn$:aws:elasticloadbalancing:ap-northeast-2:037729278610:loadbalancer/app/SC-03-Appli-QU7CHXLZTJSI/308ecac770fcd027:loadBalancerType=application:region=ap-northeast-2": {
+    "loadBalancerArn": "arn:aws:elasticloadbalancing:ap-northeast-2:037729278610:loadbalancer/app/SC-03-Appli-QU7CHXLZTJSI/308ecac770fcd027",
+    "loadBalancerCanonicalHostedZoneId": "ZWKZPGTI48KDX",
+    "loadBalancerDnsName": "internal-SC-03-Appli-QU7CHXLZTJSI-1710415748.ap-northeast-2.elb.amazonaws.com",
+    "vpcId": "vpc-03cda715311273495",
+    "securityGroupIds": [
+      "sg-0cc57ea4896a8617c"
+    ],
+    "ipAddressType": "ipv4"
+  },
+  "security-group:account=037729278610:region=ap-northeast-2:securityGroupId=sg-0cc57ea4896a8617c": {
+    "securityGroupId": "sg-0cc57ea4896a8617c",
+    "allowAllOutbound": false
+  },
+  "ssm:account=037729278610:parameterName=/dev/alb/internal/sgId:region=ap-northeast-2": "sg-0543a96c01e292cf9"
 }

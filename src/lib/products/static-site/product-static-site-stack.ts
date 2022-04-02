@@ -7,7 +7,7 @@ export interface ProductStackProps {
 
 }
 
-export class MyProductStack extends servicecatalog.ProductStack {
+export class ProductStaticSiteStack extends servicecatalog.ProductStack {
   constructor(scope: cdk.Construct, id: string, props: ProductStackProps) {
     super(scope, id);
 

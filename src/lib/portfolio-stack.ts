@@ -2,9 +2,12 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
 import { envVars } from './env-vars';
+import { ProductAlbStack } from './products/ecs/product-alb-stack';
 import { ProductEcsCluster } from './products/ecs/product-ecs-cluster-stack';
-import { ProductECSExternalALB } from './products/ecs/product-ecs-external-alb-stack';
+import { StackName } from './products/ecs/product-ecs-fargate-stack';
+//import { ProductEcsFargateServiceStack } from './products/ecs/product-ecs-fargate-service-stack';
 import { StaticSiteCicd } from './products/static-site/product-static-site-cicd-stack';
+import { ProductStaticSiteStack } from './products/static-site/product-static-site-stack';
 
 export interface IPortfolioStackProps extends cdk.StackProps {
 
@@ -54,7 +57,7 @@ export class PortfolioStack extends cdk.Stack {
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductECSExternalALB(this, 'StaticSiteS3CloudFront', {
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductStaticSiteStack(this, 'StaticSiteS3CloudFront', {
             env: devEnv,
           })),
         },
@@ -96,13 +99,13 @@ export class PortfolioStack extends cdk.Stack {
     this.portfolio.addProduct(product3);
 
     const product4 = new servicecatalog.CloudFormationProduct(this, 'ecs-alb-product', {
-      productName: 'ecs-alb-product',
+      productName: 'alb-product',
       owner: 'Product Owner',
       description: ' application load balancer, for forwarding traffic to containers',
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductECSExternalALB(this, 'EcsAlbProduct', {
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductAlbStack(this, 'EcsAlbProduct', {
             env: devEnv,
           })),
         },
@@ -111,6 +114,21 @@ export class PortfolioStack extends cdk.Stack {
 
     this.portfolio.addProduct(product4);
 
+    const product5 = new servicecatalog.CloudFormationProduct(this, 'import-vpc', {
+      productName: 'import-vpc-test',
+      owner: 'Product Owner',
+      description: ' application load balancer, for forwarding traffic to containers',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new StackName(this, 'ImportVpcProduct', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product5);
     /* const product3 = new servicecatalog.CloudFormationProduct(this, 'sagemaker-studio', {
       productName: 'Sagemaker Studio',
       owner: 'Product Owner',

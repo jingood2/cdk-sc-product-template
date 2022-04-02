@@ -27,15 +27,21 @@ export class ProductEcsClusterConstruct extends cdk.Construct {
       containerInsights: true,
     }); */
 
-    const ecsCluster = new ecs.CfnCluster(this, 'ECSCluster', {
+    const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
+      vpcId: cdk.Lazy.string( { produce: () => props.vpcId }),
+      availabilityZones: ['ap-northeast-2a', 'ap-northeast-2c'],
+    });
+
+    const ecsCluster = new ecs.Cluster(this, 'ECSCluster', {
       clusterName: `${props.environment}-cluster`,
-      clusterSettings: [{ name: 'containerInsights', value: 'enabled' }],
+      vpc: vpc,
     });
 
     // Create ContainerSecurityGroup and Role
     const containerSecurityGroup = new ec2.CfnSecurityGroup(this, 'ContainerSecurityGroup', {
       vpcId: props.vpcId,
       groupDescription: 'Access to the Fargate containers',
+      groupName: `${props.environment}-container-sg`,
     });
 
     // A role used to allow AWS Autoscaling to inspect stats and adjust scaleable targets
@@ -45,7 +51,7 @@ export class ProductEcsClusterConstruct extends cdk.Construct {
     });
 
     autoscalingRole.addToPolicy(new PolicyStatement({
-      sid: 'service-autoscaling',
+      sid: 'serviceautoscaling',
       resources: ['*'],
       actions: [
         'application-autoscaling:*',
@@ -65,7 +71,7 @@ export class ProductEcsClusterConstruct extends cdk.Construct {
     });
 
     ecsRole.addToPolicy(new PolicyStatement({
-      sid: 'ecs-service',
+      sid: 'ecsservice',
       resources: ['*'],
       actions: [
         'ec2:AttachNetworkInterface',
@@ -89,7 +95,6 @@ export class ProductEcsClusterConstruct extends cdk.Construct {
     });
 
     ecsTaskExecutionRole.addToPolicy(new iam.PolicyStatement({
-      sid: 'AmazonEcsTaskExecutionRolePolicy',
       actions: [
         'ecr:GetAuthorizationToken',
         'ecr:BatchCheckLayerAvailability',
@@ -104,7 +109,7 @@ export class ProductEcsClusterConstruct extends cdk.Construct {
 
     new cdk.CfnOutput(this, 'ClusterName', {
       description: 'The name of the ECS cluster',
-      value: ecsCluster.ref,
+      value: ecsCluster.clusterArn,
       exportName: `${id}:${props.environment}:ClusterName`,
     });
 
