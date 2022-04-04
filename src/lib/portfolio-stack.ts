@@ -114,14 +114,14 @@ export class PortfolioStack extends cdk.Stack {
 
     this.portfolio.addProduct(product4);
 
-    const product5 = new servicecatalog.CloudFormationProduct(this, 'import-vpc', {
-      productName: 'import-vpc-test',
+    const product5 = new servicecatalog.CloudFormationProduct(this, 'ecs-fargate-service-product', {
+      productName: 'ecs-fargate-service-product',
       owner: 'Product Owner',
       description: ' application load balancer, for forwarding traffic to containers',
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new StackName(this, 'ImportVpcProduct', {
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new StackName(this, 'EcsFargateServiceProduct', {
             env: devEnv,
           })),
         },

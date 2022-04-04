@@ -21,7 +21,7 @@
     },
     {
       "name": "aws-cdk",
-      "version": "^1.148.0",
+      "version": "^1.151.0",
       "type": "build"
     },
     {
@@ -177,12 +177,16 @@
       "type": "runtime"
     },
     {
+      "name": "@aws-cdk/aws-wafv2",
+      "type": "runtime"
+    },
+    {
       "name": "@aws-cdk/cloudformation-include",
       "type": "runtime"
     },
     {
       "name": "@aws-cdk/core",
-      "version": "^1.148.0",
+      "version": "^1.151.0",
       "type": "runtime"
     },
     {
@@ -200,12 +204,12 @@
     },
     {
       "name": "@aws-cdk/assert",
-      "version": "^1.148.0",
+      "version": "^1.151.0",
       "type": "test"
     },
     {
       "name": "@aws-cdk/assertions",
-      "version": "^1.148.0",
+      "version": "^1.151.0",
       "type": "test"
     }
   ],

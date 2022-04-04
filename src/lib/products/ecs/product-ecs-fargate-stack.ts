@@ -54,6 +54,7 @@ export class StackName extends servicecatalog.ProductStack {
               'ECRRepoName',
               'ContainerSize',
               'ContainerPort',
+              //'ContainerEnv',
               'Priority',
             ],
           },
@@ -160,6 +161,12 @@ export class StackName extends servicecatalog.ProductStack {
       default: 'test.example.com',
     });
 
+    /* const containerEnv = new cdk.CfnParameter(this, 'ContainerEnv', {
+      type: '',
+      description: 'Container Environment Variables( DB_USER=test, DB_PASSWORD=test1234',
+      default: 'DB_USER=admin,DB_PASSWORD=admin1234',
+    }); */
+
     /*  const regionTable = new cdk.CfnMapping(this, 'MapContainerSize', {
       mapping: {
         smallest: {
@@ -187,7 +194,6 @@ export class StackName extends servicecatalog.ProductStack {
       securityGroup: albSg,
     });
 
-    console.log(listener);
 
     const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: cdk.Lazy.string( { produce: () => vpcId.valueAsString }),
@@ -245,12 +251,22 @@ export class StackName extends servicecatalog.ProductStack {
     }; */
     //taskDefinition.addVolume(volume);
 
+    //const containerEnvironments = cdk.Lazy.list({ produce: () => containerEnv.valueAsList }, { displayHint: 'DB_USER=admin', omitEmpty: false } );
+
     const container = taskDefinition.addContainer('app', {
       containerName: `${serviceName.valueAsString}`,
       //image: ecs.ContainerImage.fromEcrRepository(ecr.Repository.fromRepositoryName(this, 'ECRRepo', `${ECRRepoName.valueAsString}`), 'latest'),
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs' }),
     });
+
+    //const containerEnvironments = containerEnv.valueAsList;
+
+    /*  const containerEnvironments = cdk.Lazy.list({ produce: () => containerEnv.valueAsList });
+
+    for ( let env in containerEnvironments) {
+      container.addEnvironment(env.split('=')[0], env.split('=')[1]);
+    } */
 
     container.addPortMappings({
       containerPort: containerPort.valueAsNumber,
@@ -275,6 +291,8 @@ export class StackName extends servicecatalog.ProductStack {
       taskDefinition,
       securityGroups: [containerSg],
     });
+
+    // ToDo: setting AutoScaling
 
     new elbv2.ApplicationListenerRule(this, 'MyApplicationListenerRule', {
       listener: listener,

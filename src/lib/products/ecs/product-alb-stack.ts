@@ -2,6 +2,7 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as ssm from '@aws-cdk/aws-ssm';
+import * as wafv2 from '@aws-cdk/aws-wafv2';
 import * as cdk from '@aws-cdk/core';
 
 export interface ProductEProps extends cdk.StackProps {
@@ -50,6 +51,13 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       allowedValues: ['true', 'false'],
     });
 
+    const enableWAF = new cdk.CfnParameter(this, 'EnableWAF', {
+      description: 'enable AWS WAF',
+      type: 'String',
+      default: 'false',
+      allowedValues: ['true', 'false'],
+    });
+
     /* const internetFacingCondition = new cdk.CfnCondition(this, 'IsInternetFacingCondition', {
       expression: cdk.Fn.conditionEquals('internet-facing', scheme.valueAsString),
     });
@@ -67,8 +75,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
     // Resources
     const albSg = new ec2.CfnSecurityGroup(this, 'AlbSG', {
       vpcId: vpcId.valueAsString,
-      groupName: `${scheme.valueAsString}-alb-sg`,
-      groupDescription: 'Access to the load balancer',
+      groupName: `${environment.valueAsString}-${scheme.valueAsString}-alb-sg`,
+      groupDescription: `Access to the ${environment.valueAsString} ${scheme.valueAsString} load balancer`,
       securityGroupIngress: [{
         ipProtocol: '-1',
         cidrIp: '0.0.0.0/0',
@@ -122,6 +130,11 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       protocol: 'HTTP',
     });
 
+    // associate ACM
+    this.createWebAcl(environment.valueAsString, enableWAF.valueAsString, alb.ref );
+
+
+    // SSM parameter store
     new ssm.StringParameter(this, 'AlbDnsName', {
       parameterName: `/${environment.valueAsString}/alb/${scheme.valueAsString}/dnsname`,
       stringValue: alb.attrDnsName,
@@ -153,6 +166,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       value: httpListener.attrListenerArn,
     });
 
+
+    // Cloudformation Output
     new cdk.CfnOutput(this, 'ALBDNSName', {
       description: 'DNS name of the ALB',
       value: alb.attrDnsName,
@@ -177,6 +192,144 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       value: alb.attrCanonicalHostedZoneId,
     });
 
+  }
 
+  private createWebAcl(env: string, enableWAF:string, albArn: string) {
+
+    if (enableWAF === 'false') {
+      return;
+    }
+
+    const webAcl = new wafv2.CfnWebACL(this, 'WebACL', {
+      defaultAction: { allow: {} },
+      name: `${env}-waf-web-acl`,
+      rules: [
+        {
+          priority: 1,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesCommonRuleSet',
+          },
+          name: 'AWS-AWSManagedRulesCommonRuleSet',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
+            },
+          },
+        },
+        {
+          priority: 2,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesSQLiRuleSet',
+          },
+          name: 'AWS-AWSManagedRulesSQLiRuleSet',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesSQLiRuleSet',
+            },
+          },
+        },
+        {
+          priority: 3,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesKnownBadInputsRuleSet',
+          },
+          name: 'AWS-AWSManagedRulesKnownBadInputsRuleSet',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesKnownBadInputsRuleSet',
+            },
+          },
+        },
+        {
+          priority: 4,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesLinuxRuleSet',
+          },
+          name: 'AWS-AWSManagedRulesLinuxRuleSet',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesLinuxRuleSet',
+            },
+          },
+        },
+        {
+          priority: 5,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesAmazonIpReputationList',
+          },
+          name: 'AWS-AWSManagedRulesAmazonIpReputationList',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesAmazonIpReputationList',
+            },
+          },
+        },
+        {
+          priority: 6,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesAnonymousIpList',
+          },
+          name: 'AWS-AWSManagedRulesAnonymousIpList',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesAnonymousIpList',
+            },
+          },
+        },
+        {
+          // eslint-disable-next-line quote-props
+          'priority': 7,
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWS-AWSManagedRulesBotControlRuleSet',
+          },
+          name: 'AWS-AWSManagedRulesBotControlRuleSet',
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesBotControlRuleSet',
+            },
+          },
+        },
+      ],
+      scope: 'REGIONAL',
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: `${env}-waf-web-acl`,
+        sampledRequestsEnabled: true,
+      },
+    });
+
+    const webAclAssoc = new wafv2.CfnWebACLAssociation(this, 'WebACLAssociation', {
+      resourceArn: albArn,
+      webAclArn: webAcl.attrArn,
+    });
+    webAclAssoc.addDependsOn(webAcl);
   }
 }

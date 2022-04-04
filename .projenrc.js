@@ -1,6 +1,6 @@
 const { awscdk } = require('projen');
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: '1.148.0',
+  cdkVersion: '1.151.0',
   defaultReleaseBranch: 'main',
   name: 'cdk-sc-product-template',
 
@@ -33,6 +33,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     '@aws-cdk/aws-s3-assets',
     '@aws-cdk/cloudformation-include',
     '@aws-cdk/aws-ecs-patterns',
+    '@aws-cdk/aws-wafv2',
     'chalk',
   ], /* Runtime dependencies of this module. */
   // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
