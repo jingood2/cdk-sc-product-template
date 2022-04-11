@@ -3,15 +3,17 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo deploy 
+      - echo deploy envorinment variables 
       - echo $AWS_DEFAULT_REGION
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo $CONTAINER_NAME
-      - echo $CONTAINER_PORT
+      #- echo $CONTAINER_PORT
       - echo $AWS_ACCOUNT_ID
-      - echo $DEPLOY_ENV_NAME
+      #- echo $DEPLOY_ENV_NAME
       - echo $REPOSITORY_URI
       - echo $TARGET_TYPE
+      - echo $ARTIFACT_BUCKET
+      - echo $IMAGE_TAG
       - aws --version
       - |
         if [ "TARGET_TYPE" = "EKS"]; then
@@ -35,8 +37,9 @@ phases:
         fi 
       - |
         if [ "$TARGET_TYPE" = "BEANSTALK" ]; then 
-          aws elasticbeanstalk create-application-version --application-name $CONTAINER_NAME --version-label $APP_VERSION --source-bundle S3Bucket=$S3_BUCKET,S3Key=imagedefinitions.json
-          aws elasticbeanstalk update-environment --application-name $CONTAINER_NAME --environment-name $DEPLOY_ENV_NAME --version-label=$APP_VERSION
+          echo $S3_KEY
+          aws elasticbeanstalk create-application-version --application-name $CONTAINER_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket="$ARTIFACT_BUCKET",S3Key="$CONTAINER_NAME/$IMAGE_TAG.zip"
+          aws elasticbeanstalk update-environment --application-name $CONTAINER_NAME --environment-name $DEPLOY_ENV_NAME --version-label=v$CODEBUILD_BUILD_NUMBER
         fi 
       - |
         if [ "$TARGET_TYPE" = "EKS" ]; then 

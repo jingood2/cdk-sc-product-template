@@ -312,7 +312,7 @@ export class StackName extends servicecatalog.ProductStack {
 
     atg.addTarget(svc);
 
-    const ci = new CIConstruct(this, 'CI', { containerName: serviceName.valueAsString });
+    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString });
 
     const deployAction = new codepipeline_actions.EcsDeployAction({
       actionName: 'ECSDeployAction',
@@ -327,6 +327,13 @@ export class StackName extends servicecatalog.ProductStack {
       deploymentTimeout: cdk.Duration.minutes(60), // optional, default is 60 minutes
     });
 
-    new CDConstruct(this, 'CD', { pipeline: ci.pipeline, deployAction: deployAction });
+    new CDConstruct(this, 'CD', {
+      pipeline: ci.pipeline,
+      deployAction: deployAction,
+      serviceName: serviceName.valueAsString,
+      targetEnv: svc.serviceArn,
+      targetType: 'ECS',
+      buildOutput: ci.buildOutput,
+    });
   }
 }

@@ -4,7 +4,7 @@ import * as eb from '@aws-cdk/aws-elasticbeanstalk';
 import * as iam from '@aws-cdk/aws-iam';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
-//import { CDConstruct } from './cd-construct';
+import { CDEBConstruct } from './cd-eb-construct';
 import { CIConstruct } from './ci-construct';
 
 export interface ckProps extends cdk.StackProps {
@@ -384,7 +384,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     const ebEnv = new eb.CfnEnvironment(this, 'EBEnvironment', {
       // default environmentName is `develop`
-      environmentName: `${Environment.valueAsString}-eb-env`,
+      environmentName: `${Environment.valueAsString}-${serviceName.valueAsString}-env`,
       applicationName: `${Environment.valueAsString}-${serviceName.valueAsString}`,
       solutionStackName: '64bit Amazon Linux 2 v3.4.13 running Docker',
       optionSettings: option_settings,
@@ -396,7 +396,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     });
     ebEnv.addDependsOn(ebApp);
 
-    new CIConstruct(this, 'CI', { containerName: serviceName.valueAsString });
+    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString });
 
     /* const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './deploy-buildspec.yml'), 'utf8'));
     const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
@@ -406,13 +406,14 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
         privileged: true,
       },
       environmentVariables: {
-        REPOSITORY_URI: { value: ecrRepository.repositoryUri },
-        CONTAINER_NAME: { value: CONTAINER_NAME.valueAsString },
-        CONTAINER_PORT: { value: CONTAINER_PORT.valueAsNumber },
-        DEPLOY_ENV_NAME: { value: DEPLOY_ENV_NAME.valueAsString },
+        //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
+        CONTAINER_NAME: { value: serviceName.valueAsString },
+        //CONTAINER_PORT: { value: CONTAINER_PORT.valueAsNumber },
+        DEPLOY_ENV_NAME: { value: ebEnv.environmentName },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
-        TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
+        //TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
+        TARGET_TYPE: { value: 'BEANSTALK' },
         //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
       },
@@ -428,9 +429,22 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
         'cloudwatch:*',
         'logs:*',
         'cloudformation:*'],
-    }));
+    })); */
 
-    new CDConstruct(this, 'CD', { pipeline: ci.pipeline, deployAction: deployAction }); */
+    /* const deployAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'Deploy',
+      input: ci.buildOutput,
+      project: deployProject,
+    }); */
+
+    new CDEBConstruct(this, 'CDEB', {
+      pipeline: ci.pipeline,
+      serviceName: serviceName.valueAsString,
+      targetEnv: `${Environment.valueAsString}-${serviceName.valueAsString}-env`,
+      targetType: 'BEANSTALK',
+      imageTag: ci.IMAGE_TAG,
+      buildOutput: ci.buildOutput,
+    });
 
 
     // S3 SourceAction

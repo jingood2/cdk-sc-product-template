@@ -1,20 +1,24 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
+import * as iam from '@aws-cdk/aws-iam';
 import * as cdk from '@aws-cdk/core';
+import * as yaml from 'yaml';
 //import * as ecs from '@aws-cdk/aws-ecs';
 
 
 export interface CDConstructProps {
   pipeline: codepipeline.Pipeline;
-  deployAction: codepipeline.IAction;
   serviceName: string;
   targetEnv: string;
   targetType: string;
-  imageTag?: string;
+  imageTag: string;
   buildOutput: codepipeline.Artifact;
 }
 
-export class CDConstruct extends cdk.Construct {
+export class CDEBConstruct extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: CDConstructProps) {
     super(scope, id);
 
@@ -39,8 +43,50 @@ export class CDConstruct extends cdk.Construct {
     /* const role = iam.Role.fromRoleArn(this, 'Admin', Arn.format({ service: 'iam', resource: 'role', resourceName: 'Admin' }, this));
     manualApprovalAction.grantManualApproval(role); */
 
+    const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './deploy-buildspec.yml'), 'utf8'));
+    const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
+      buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+        privileged: true,
+      },
+      environmentVariables: {
+        //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
+        CONTAINER_NAME: { value: props.serviceName },
+        //CONTAINER_PORT: { value: CONTAINER_PORT.valueAsNumber },
+        DEPLOY_ENV_NAME: { value: props.targetEnv },
+        AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
+        AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+        ARTIFACT_BUCKET: { value: `${props.serviceName}-codepipeline-artifact` },
+        IMAGE_TAG: { value: props.imageTag },
+        //S3_KEY: { value: objKey },
+        //TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
+        TARGET_TYPE: { value: props.targetType },
+        //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
+        //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+      },
+    });
+    deployProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+      resources: ['*'],
+      actions: ['elasticbeanstalk:*',
+        'autoscaling:*',
+        'elasticloadbalancing:*',
+        'ecs:*',
+        's3:*',
+        'ec2:*',
+        'cloudwatch:*',
+        'logs:*',
+        'cloudformation:*'],
+    }));
+
+    const deployAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'Deploy',
+      input: props.buildOutput,
+      project: deployProject,
+    });
+
     const deployStage = props.pipeline.addStage( { stageName: 'Deploy' });
-    deployStage.addAction(props.deployAction );
+    deployStage.addAction(deployAction);
 
 
     /*  const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './deploy-buildspec.yml'), 'utf8'));
