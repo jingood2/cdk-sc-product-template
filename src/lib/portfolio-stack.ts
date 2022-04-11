@@ -3,6 +3,7 @@ import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
 import { envVars } from './env-vars';
 import { ProductAlbStack } from './products/ecs/product-alb-stack';
+import { SCProductBeanstalkDockerStack } from './products/ecs/product-beanstalk-docker-stack';
 import { ProductEcsCluster } from './products/ecs/product-ecs-cluster-stack';
 import { StackName } from './products/ecs/product-ecs-fargate-stack';
 //import { ProductEcsFargateServiceStack } from './products/ecs/product-ecs-fargate-service-stack';
@@ -129,6 +130,22 @@ export class PortfolioStack extends cdk.Stack {
     });
 
     this.portfolio.addProduct(product5);
+
+    const product6 = new servicecatalog.CloudFormationProduct(this, 'elasticbeanstalk-product', {
+      productName: 'elasticbeanstalk-product',
+      owner: 'Product Owner',
+      description: 'servicecatalog elasticbeanstalk product ',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new SCProductBeanstalkDockerStack(this, 'ElasticBeanstalkProduct', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product6);
     /* const product3 = new servicecatalog.CloudFormationProduct(this, 'sagemaker-studio', {
       productName: 'Sagemaker Studio',
       owner: 'Product Owner',

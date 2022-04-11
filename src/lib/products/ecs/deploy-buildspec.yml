@@ -1,0 +1,51 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo deploy 
+      - echo $AWS_DEFAULT_REGION
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $CONTAINER_NAME
+      - echo $CONTAINER_PORT
+      - echo $AWS_ACCOUNT_ID
+      - echo $DEPLOY_ENV_NAME
+      - echo $REPOSITORY_URI
+      - echo $TARGET_TYPE
+      - aws --version
+      - |
+        if [ "TARGET_TYPE" = "EKS"]; then
+          curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mv ./kubectl /usr/local/bin/kubectl
+          mkdir ~/.kube
+          aws eks --region ${AWS_DEFAULT_REGION} update-kubeconfig --name ${DEPLOY_ENV_NAME}
+          kubectl get po -n kube-system
+        fi
+  build:
+    commands:
+      - echo Skip Build on `date`
+  post_build:
+    commands:
+      - echo Post Build started on `date`
+      - echo $TARGET_TYPE
+      - |
+        if [ "$TARGET_TYPE" = "ECS" ]; then 
+          aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $CONTAINER_NAME --force-new-deployment --region $AWS_DEFAULT_REGION
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "BEANSTALK" ]; then 
+          aws elasticbeanstalk create-application-version --application-name $CONTAINER_NAME --version-label $APP_VERSION --source-bundle S3Bucket=$S3_BUCKET,S3Key=imagedefinitions.json
+          aws elasticbeanstalk update-environment --application-name $CONTAINER_NAME --environment-name $DEPLOY_ENV_NAME --version-label=$APP_VERSION
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "EKS" ]; then 
+          sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./EKS/deploy.yaml
+          sed -i.bak 's#DATE_STRING#'"$DATE"'#' ./EKS/deploy.yaml
+          kubectl apply -f ./EKS/deploy.yaml
+          kubectl apply -f ./EKS/svc.yaml
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "LAMBDA" ]; then 
+          echo Nothing to do on LAMBDA 
+        fi 

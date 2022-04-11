@@ -80,6 +80,12 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       securityGroupIngress: [{
         ipProtocol: '-1',
         cidrIp: '0.0.0.0/0',
+        fromPort: 443,
+      },
+      {
+        ipProtocol: '-1',
+        cidrIp: '0.0.0.0/0',
+        fromPort: 80,
       }],
     });
 

@@ -1,3 +1,5 @@
+//import * as codepipeline from '@aws-cdk/aws-codepipeline';
+import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
 //import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
@@ -6,6 +8,8 @@ import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as iam from '@aws-cdk/aws-iam';
 import * as servicecatalog from '@aws-cdk/aws-servicecatalog';
 import * as cdk from '@aws-cdk/core';
+import { CDConstruct } from './cd-construct';
+import { CIConstruct } from './ci-construct';
 
 export interface StackNameProps extends cdk.StackProps {
 }
@@ -308,5 +312,21 @@ export class StackName extends servicecatalog.ProductStack {
 
     atg.addTarget(svc);
 
+    const ci = new CIConstruct(this, 'CI', { containerName: serviceName.valueAsString });
+
+    const deployAction = new codepipeline_actions.EcsDeployAction({
+      actionName: 'ECSDeployAction',
+      service: svc,
+      // if your file is called imagedefinitions.json,
+      // use the `input` property,
+      // and leave out the `imageFile` property
+      // if your file name is _not_ imagedefinitions.json,
+      // use the `imageFile` property,
+      // and leave out the `input` property
+      imageFile: ci.buildOutput.atPath('Dockerrun.aws.json'),
+      deploymentTimeout: cdk.Duration.minutes(60), // optional, default is 60 minutes
+    });
+
+    new CDConstruct(this, 'CD', { pipeline: ci.pipeline, deployAction: deployAction });
   }
 }

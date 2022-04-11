@@ -19,12 +19,14 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     '@aws-cdk/aws-events-targets',
     '@aws-cdk/aws-s3',
     '@aws-cdk/cloudformation-include',
+    '@aws-cdk/aws-elasticbeanstalk',
     '@aws-cdk/aws-ec2',
     '@aws-cdk/aws-ssm',
     '@aws-cdk/aws-elasticloadbalancingv2',
     '@aws-cdk/aws-elasticloadbalancingv2-targets',
     '@aws-cdk/aws-autoscaling',
     '@aws-cdk/aws-certificatemanager',
+    '@aws-cdk/aws-secretsmanager',
     '@aws-cdk/aws-route53',
     '@aws-cdk/aws-route53-targets',
     '@aws-cdk/aws-cloudfront',
@@ -34,7 +36,12 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     '@aws-cdk/cloudformation-include',
     '@aws-cdk/aws-ecs-patterns',
     '@aws-cdk/aws-wafv2',
+    '@aws-cdk/aws-route53resolver',
+    '@aws-cdk/aws-ecr',
+    '@aws-cdk/aws-ram',
     'chalk',
+    'fs',
+    'yaml',
   ], /* Runtime dependencies of this module. */
   // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
   // devDeps: [],             /* Build dependencies for this module. */

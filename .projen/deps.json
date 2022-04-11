@@ -121,11 +121,19 @@
       "type": "runtime"
     },
     {
+      "name": "@aws-cdk/aws-ecr",
+      "type": "runtime"
+    },
+    {
       "name": "@aws-cdk/aws-ecs",
       "type": "runtime"
     },
     {
       "name": "@aws-cdk/aws-ecs-patterns",
+      "type": "runtime"
+    },
+    {
+      "name": "@aws-cdk/aws-elasticbeanstalk",
       "type": "runtime"
     },
     {
@@ -145,11 +153,19 @@
       "type": "runtime"
     },
     {
+      "name": "@aws-cdk/aws-ram",
+      "type": "runtime"
+    },
+    {
       "name": "@aws-cdk/aws-route53",
       "type": "runtime"
     },
     {
       "name": "@aws-cdk/aws-route53-targets",
+      "type": "runtime"
+    },
+    {
+      "name": "@aws-cdk/aws-route53resolver",
       "type": "runtime"
     },
     {
@@ -162,6 +178,10 @@
     },
     {
       "name": "@aws-cdk/aws-s3-deployment",
+      "type": "runtime"
+    },
+    {
+      "name": "@aws-cdk/aws-secretsmanager",
       "type": "runtime"
     },
     {
@@ -200,6 +220,14 @@
     {
       "name": "constructs",
       "version": "^3.2.27",
+      "type": "runtime"
+    },
+    {
+      "name": "fs",
+      "type": "runtime"
+    },
+    {
+      "name": "yaml",
       "type": "runtime"
     },
     {
