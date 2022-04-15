@@ -27,6 +27,8 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
             Parameters: [
               'Environment',
               'TargetSubnets',
+              'TargetSubnet1',
+              'TargetSubnet2',
               'VpcId',
             ],
           },
@@ -49,6 +51,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
               'ServiceName',
               'E2InstanceType',
               'TGHealthCheckPath',
+              'EBPlatformType',
             ],
           },
         ],
@@ -67,27 +70,43 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
       description: 'VPC ID for ECS Cluster',
     });
 
-    /* const targetSubnets = new cdk.CfnParameter(this, 'TargetSubnets', {
-      type: 'List<AWS::EC2::Subnet::Id>',
-      description: 'Launch application load balancer into these subnets',
-    }); */
-
     const targetSubnet1 = new cdk.CfnParameter(this, 'TargetSubnet1', {
       type: 'AWS::EC2::Subnet::Id',
-      description: 'Launch application load balancer into these subnets',
+      description: ' target subnet for the elastic beanstalk',
     });
 
     const targetSubnet2 = new cdk.CfnParameter(this, 'TargetSubnet2', {
       type: 'AWS::EC2::Subnet::Id',
-      description: 'Launch application load balancer into these subnets',
+      description: ' target subnet for the elastic beanstalk',
     });
 
     const instanceType = new cdk.CfnParameter(this, 'E2InstanceType', {
       type: 'String',
       description: 'Instance Type of EB EC2',
-      default: 't4g.micro',
+      default: 't3.medium',
       allowedValues:
-        ['t4g.micro', 't3a.micro', 't3a.small', 't3a.medium', 't3a.large', 'm5a.micro', 'm5a.small', 'm5a.medium', 'm5a.large'],
+        //['t4g.micro', 't3a.micro', 't3a.small', 't3a.medium', 't3a.large', 'm5a.micro', 'm5a.small', 'm5a.medium', 'm5a.large'],
+        ['t3.micro', 't3.small', 't3.medium', 't3.large', 't3.xlarge', 'm6i.large', 'm6i.xlarge', 'm5.large', 'm5.xlarge'],
+    });
+
+    const platformType = new cdk.CfnParameter(this, 'EBPlatformType', {
+      type: 'String',
+      description: 'Elastic Beanstalk supports the following Tomcat platform versions',
+      default: '64bit Amazon Linux 2 v3.4.13 running Docker',
+      allowedValues:
+        ['64bit Amazon Linux 2 v4.2.13 running Tomcat 8.5 Corretto 11',
+          '64bit Amazon Linux 2 v4.2.13 running Tomcat 8.5 Corretto 8',
+          '64bit Amazon Linux 2 v3.4.13 running Docker',
+          '64bit Windows Server Core 2012 R2 v2.3.0 running .NET Core',
+          '64bit Windows Server 2012 R2 v2.9.0 running IIS 8.5',
+          '64bit Windows Server 2016 v2.9.0 running IIS 10.0',
+          '64bit Windows Server Core 2019 v2.9.0 running IIS 10.0',
+          '64bit Windows Server 2019 v2.9.0 running IIS 10.0',
+          '64bit Amazon Linux 2 v5.5.1 running Node.js 16',
+          '64bit Amazon Linux 2 v5.5.1 running Node.js 14',
+          '64bit Amazon Linux 2 v3.3.12 running PHP 8.0',
+          '64bit Amazon Linux 2 v3.3.12 running Python 3.8',
+          '64bit Amazon Linux 2 v3.3.12 running Python 3.7'],
     });
 
     /* const tgListenerPort = new cdk.CfnParameter(this, 'TGListenerPort', {
@@ -142,6 +161,13 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
       default: 'test.example.com',
     });
 
+    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+      type: 'String',
+      description: 'Source Provider Type',
+      default: 'GITHUB',
+      allowedValues: ['GITHUB', 'CODECOMMIT', 'S3'],
+    });
+
     // Create EB Application Security Group
     const ebSg = new ec2.CfnSecurityGroup(this, 'EBSecurityGroup', {
       vpcId: vpcId.valueAsString,
@@ -158,7 +184,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     // beanstalk project setup
     const ebApp = new eb.CfnApplication(this, 'EBApplication', {
-      applicationName: `${Environment.valueAsString}-${serviceName.valueAsString}`,
+      applicationName: `${serviceName.valueAsString}`,
       description: `${Environment.valueAsString} ${serviceName.valueAsString} EB Application`,
     });
 
@@ -173,6 +199,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     ec2ProfileRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWebTier'));
     ec2ProfileRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkMulticontainerDocker'));
     ec2ProfileRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWorkerTier'));
+    ec2ProfileRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryFullAccess'));
     ec2ProfileRole.addToPolicy(new iam.PolicyStatement({
       resources: ['*'],
       actions: [
@@ -385,8 +412,8 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     const ebEnv = new eb.CfnEnvironment(this, 'EBEnvironment', {
       // default environmentName is `develop`
       environmentName: `${Environment.valueAsString}-${serviceName.valueAsString}-env`,
-      applicationName: `${Environment.valueAsString}-${serviceName.valueAsString}`,
-      solutionStackName: '64bit Amazon Linux 2 v3.4.13 running Docker',
+      applicationName: `${serviceName.valueAsString}`,
+      solutionStackName: platformType.valueAsString,
       optionSettings: option_settings,
       /* tags: [
         { key: 'cz-org', value: 'skmg' },
@@ -396,7 +423,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     });
     ebEnv.addDependsOn(ebApp);
 
-    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString });
+    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString, sourceProvider: provider.valueAsString });
 
     /* const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './deploy-buildspec.yml'), 'utf8'));
     const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
@@ -439,10 +466,10 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     new CDEBConstruct(this, 'CDEB', {
       pipeline: ci.pipeline,
-      serviceName: serviceName.valueAsString,
+      serviceName: `${serviceName.valueAsString}`,
       targetEnv: `${Environment.valueAsString}-${serviceName.valueAsString}-env`,
       targetType: 'BEANSTALK',
-      imageTag: ci.IMAGE_TAG,
+      imageTag: 'latest',
       buildOutput: ci.buildOutput,
     });
 

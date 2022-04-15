@@ -165,6 +165,13 @@ export class StackName extends servicecatalog.ProductStack {
       default: 'test.example.com',
     });
 
+    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+      type: 'String',
+      description: 'Source Provider Type',
+      default: 'GITHUB',
+      allowedValues: ['GITHUB', 'CODECOMMIT', 'S3'],
+    });
+
     /* const containerEnv = new cdk.CfnParameter(this, 'ContainerEnv', {
       type: '',
       description: 'Container Environment Variables( DB_USER=test, DB_PASSWORD=test1234',
@@ -312,7 +319,7 @@ export class StackName extends servicecatalog.ProductStack {
 
     atg.addTarget(svc);
 
-    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString });
+    const ci = new CIConstruct(this, 'CI', { serviceName: serviceName.valueAsString, sourceProvider: provider.valueAsString });
 
     const deployAction = new codepipeline_actions.EcsDeployAction({
       actionName: 'ECSDeployAction',

@@ -6,6 +6,12 @@ env:
 phases:
   pre_build:
     commands:
+      - docker version
+      - curl -JLO https://github.com/docker/buildx/releases/download/v0.7.1/buildx-v0.7.1.linux-amd64
+      - mkdir -p ~/.docker/cli-plugins
+      - mv buildx-v0.7.1.linux-amd64 ~/.docker/cli-plugins/docker-buildx
+      - chmod a+rx ~/.docker/cli-plugins/docker-buildx
+      - docker run --privileged --rm tonistiigi/binfmt --install all
       - echo Logging in to Amazon ECR...
       - echo $AWS_DEFAULT_REGION
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
@@ -15,6 +21,7 @@ phases:
       - echo $CONTAINER_PORT
       - echo $ARTIFACT_BUCKET
       - aws --version
+      - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - export IMAGE_TAG=${COMMIT_HASH:=latest}
@@ -38,11 +45,17 @@ phases:
         fi
       - |
         if [ "$BUILD_TYPE" = "DOCKER" ]; then 
-          echo Building the Docker image...
-          docker build -t $REPOSITORY_URI:latest .
-          echo Tagging Docker image...
+          echo Build started on `date`
+          echo Building the Docker images...
+          docker buildx create --use --name crossx
+          docker buildx build --load --platform=linux/arm64 -t $REPOSITORY_URI:latest .
           docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+          docker images
         fi
+      #docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      #- echo Building the Docker image...
+      #- docker build -t $REPOSITORY_URI:latest .
+      #- echo Tagging Docker image...
   post_build:
     commands:
       - echo Build completed on `date`

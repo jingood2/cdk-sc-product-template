@@ -13,6 +13,7 @@ import * as yaml from 'yaml';
 export interface CIConstructProps {
   //containerPort: number;
   serviceName: string;
+  sourceProvider: string;
   //sourceProvider: string;
   //targetType: string;
 }
@@ -24,17 +25,17 @@ export class CIConstruct extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: CIConstructProps) {
     super(scope, id);
 
-    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+    /* const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
       type: 'String',
       description: 'Source Provider Type',
       default: 'GITHUB',
       allowedValues: ['GITHUB', 'CODECOMMIT', 'S3'],
-    });
+    }); */
 
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
       description: 'Service Name',
-      default: 'demo-app',
+      default: 'hello-app',
     });
 
     const containerPort = new cdk.CfnParameter(this, 'ContainerPort', {
@@ -66,7 +67,7 @@ export class CIConstruct extends cdk.Construct {
       type: 'String',
       description: 'Source Packaging Tool',
       default: 'GRADLE',
-      allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON'],
+      allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON', 'DOCKER'],
     });
 
     /* const DEPLOY_ENV_NAME = new cdk.CfnParameter(this, 'DeployEnvName', {
@@ -114,7 +115,7 @@ export class CIConstruct extends cdk.Construct {
     const buildProject = new codebuild.PipelineProject(this, 'CIBuildProject', {
       buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0, // for arm64/v8 cpu platform
         privileged: true,
       },
       environmentVariables: {
@@ -129,7 +130,8 @@ export class CIConstruct extends cdk.Construct {
         //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
       },
-      cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
+      // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
+      //cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
     });
     ecrRepository.grantPullPush(buildProject.grantPrincipal);
 
@@ -145,7 +147,8 @@ export class CIConstruct extends cdk.Construct {
       output: sourceOutput,
     }); */
 
-    const sourceAction = this.selectSourceAction(provider.valueAsString,
+    //const sourceAction = this.selectSourceAction(provider.valueAsString,
+    const sourceAction = this.selectSourceAction( 'GITHUB',
       repoName.valueAsString, repoBranch.valueAsString, sourceOutput, repoOwner.valueAsString, githubTokenSecretId.valueAsString);
 
     const buildAction = new codepipeline_actions.CodeBuildAction({
@@ -194,6 +197,7 @@ export class CIConstruct extends cdk.Construct {
     buildStage.addAction(buildAction);
 
     this.IMAGE_TAG = buildAction.variable('IMAGE_TAG');
+    console.log(this.IMAGE_TAG);
 
     this.pipeline = githubPipeline;
 
@@ -235,12 +239,22 @@ export class CIConstruct extends cdk.Construct {
         output: sourceOutput,
       });
     }
+
     return new codepipeline_actions.CodeCommitSourceAction({
       actionName: 'CODECOMMIT',
       repository: codecommit.Repository.fromRepositoryName(this, 'GitRepository', repoName),
       branch: branch,
       output: sourceOutput,
     });
+
+    /* return new codepipeline_actions.GitHubSourceAction({
+      actionName: 'GITHUB',
+      owner: owner ?? '',
+      repo: repoName,
+      branch: branch,
+      oauthToken: cdk.SecretValue.secretsManager(secretId ?? ''),
+      output: sourceOutput,
+    }); */
 
   }
 }

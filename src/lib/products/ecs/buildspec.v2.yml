@@ -53,7 +53,7 @@ phases:
       - |
         if [ "$TARGET_TYPE" = "ECS" ]; then 
           echo Writing image definitions file for ECS...
-          printf '[{"name": "%s", "imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > Dockerrun.aws.json
+          printf '[{"name": "%s", "imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
         fi 
       - |
         if [ "$TARGET_TYPE" = "BEANSTALK" ]; then 
@@ -73,5 +73,6 @@ phases:
         fi 
 artifacts:
   files:
+    - imagedefinitions.json
     - Dockerrun.aws.json
   name: $IMAGE_TAG

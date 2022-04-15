@@ -22,12 +22,13 @@ export class CDEBConstruct extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: CDConstructProps) {
     super(scope, id);
 
-    /* const containerName = new cdk.CfnParameter(this, 'ServiceName', {
+    const imageTag = new cdk.CfnParameter(this, 'DockerImageTag', {
       type: 'String',
-      description: 'Service Name',
-      default: 'demo-app',
+      description: 'deploy Docker ImageTag',
+      default: 'latest',
     });
 
+    /*
     const containerPort = new cdk.CfnParameter(this, 'ContainerPort', {
       type: 'Number',
       description: 'Container Port',
@@ -58,7 +59,7 @@ export class CDEBConstruct extends cdk.Construct {
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: `${props.serviceName}-codepipeline-artifact` },
-        IMAGE_TAG: { value: props.imageTag },
+        IMAGE_TAG: { value: imageTag.valueAsString },
         //S3_KEY: { value: objKey },
         //TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
         TARGET_TYPE: { value: props.targetType },
@@ -143,4 +144,27 @@ export class CDEBConstruct extends cdk.Construct {
       });
     } */
   }
+  /* private selectDeployAction(targetType: string, repoName: string, branch: string,
+    sourceOutput: codepipeline.Artifact, owner?: string, secretId?: string): codepipeline_actions.Action {
+
+    //const sourceOutput = new codepipeline.Artifact();
+
+    if (provider === 'ECS') {
+      return new codepipeline_actions.GitHubSourceAction({
+        actionName: 'GITHUB',
+        owner: owner ?? '',
+        repo: repoName,
+        branch: branch,
+        oauthToken: cdk.SecretValue.secretsManager(secretId ?? ''),
+        output: sourceOutput,
+      });
+    }
+    return new codepipeline_actions.CodeCommitSourceAction({
+      actionName: 'BEANSTALK',
+      repository: codecommit.Repository.fromRepositoryName(this, 'GitRepository', repoName),
+      branch: branch,
+      output: sourceOutput,
+    });
+
+  } */
 }

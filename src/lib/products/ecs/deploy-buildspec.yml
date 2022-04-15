@@ -37,7 +37,6 @@ phases:
         fi 
       - |
         if [ "$TARGET_TYPE" = "BEANSTALK" ]; then 
-          echo $S3_KEY
           aws elasticbeanstalk create-application-version --application-name $CONTAINER_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket="$ARTIFACT_BUCKET",S3Key="$CONTAINER_NAME/$IMAGE_TAG.zip"
           aws elasticbeanstalk update-environment --application-name $CONTAINER_NAME --environment-name $DEPLOY_ENV_NAME --version-label=v$CODEBUILD_BUILD_NUMBER
         fi 

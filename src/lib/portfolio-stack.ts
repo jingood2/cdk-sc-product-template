@@ -6,6 +6,8 @@ import { ProductAlbStack } from './products/ecs/product-alb-stack';
 import { SCProductBeanstalkDockerStack } from './products/ecs/product-beanstalk-docker-stack';
 import { ProductEcsCluster } from './products/ecs/product-ecs-cluster-stack';
 import { StackName } from './products/ecs/product-ecs-fargate-stack';
+import { ProductWafV2 } from './products/ecs/product-wafv2-stack';
+import { SCCIProduct } from './products/ecs/sc-ci-product';
 //import { ProductEcsFargateServiceStack } from './products/ecs/product-ecs-fargate-service-stack';
 import { StaticSiteCicd } from './products/static-site/product-static-site-cicd-stack';
 import { ProductStaticSiteStack } from './products/static-site/product-static-site-stack';
@@ -146,6 +148,38 @@ export class PortfolioStack extends cdk.Stack {
     });
 
     this.portfolio.addProduct(product6);
+
+    const product7 = new servicecatalog.CloudFormationProduct(this, 'waf-v2-product', {
+      productName: 'waf-v2-product',
+      owner: 'Product Owner',
+      description: 'servicecatalog wafv2 product ',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new ProductWafV2(this, 'WafV2Product', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product7);
+
+    const product8 = new servicecatalog.CloudFormationProduct(this, 'ci-product', {
+      productName: 'ci-product',
+      owner: 'Product Owner',
+      description: 'servicecatalog Continuely Integraton product ',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new SCCIProduct(this, 'SCCIProduct', {
+            env: devEnv,
+          })),
+        },
+      ],
+    });
+
+    this.portfolio.addProduct(product8);
     /* const product3 = new servicecatalog.CloudFormationProduct(this, 'sagemaker-studio', {
       productName: 'Sagemaker Studio',
       owner: 'Product Owner',
